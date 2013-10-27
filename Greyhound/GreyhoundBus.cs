@@ -32,7 +32,6 @@ namespace Greyhound
                         Pipline = {Persistor = Pipline.Persistor}
                     };
             }
-            RestoreBus();
         }
 
         public string Name { get; private set; }
@@ -48,10 +47,12 @@ namespace Greyhound
             set { _pipline = value; }
         }
 
-        private void RestoreBus()
+        public void RestoreBus()
         {
             foreach (IMessage message in Pipline.Persistor.Restore(Name))
                 Utils.PutNonGenericMessageOnBus(message, this);
+            if(!_isErrorBus)
+                ErrorBus.RestoreBus();
         }
 
         public void PutMessage<T>(IMessage<T> message)
