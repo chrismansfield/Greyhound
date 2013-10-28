@@ -12,8 +12,9 @@ namespace Greyhound.Playground
         static void Main(string[] args)
         {
             var bus = new GreyhoundBus();
+            
             bus.AddSubscriber(new MySubscriber());
-            bus.AddSubscriber(new MyErrorSubscriber());
+            //bus.AddSubscriber(new MyErrorSubscriber());
 
             for (var i = 0; i < 1000; i++)
             {
@@ -52,7 +53,7 @@ namespace Greyhound.Playground
     {
         protected override void OnError(MessageContext<MyMessage> messageContext, ErrorMessage<MyMessage> message)
         {
-            Console.WriteLine("An error occured on subscriber {0}.", message.SubscriberName);
+            Console.WriteLine("An error occured on subscriber {0}. Exception: {1}", message.SubscriberName, message.Exception);
         }
     }
 }

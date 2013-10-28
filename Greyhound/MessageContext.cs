@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Greyhound
 {
@@ -7,41 +9,38 @@ namespace Greyhound
     {
         private readonly ConcurrentBag<IMessage> _errorMessages;
         private readonly ConcurrentBag<IMessage> _messages;
+        private readonly ConcurrentBag<Action<GreyhoundBus>> _pendingPutMessages;
 
         public MessageContext(IMessage<T> message)
         {
             Message = message;
             _messages = new ConcurrentBag<IMessage>();
             _errorMessages = new ConcurrentBag<IMessage>();
+            _pendingPutMessages = new ConcurrentBag<Action<GreyhoundBus>>();
         }
 
         public IMessage<T> Message { get; private set; }
 
         public void AddEvent<TEvent>(IMessage<TEvent> newMessage)
         {
-            _messages.Add(newMessage);
+            _pendingPutMessages.Add(gb => gb.PutMessage(newMessage));
         }
 
-        public void AddError(string name, IMessage<T> message, Exception exception)
+        internal void AddError(string subscriberName, IMessage<T> message, Exception exception)
         {
-            _errorMessages.Add(Greyhound.Message.Error(message, name, exception));
+            var errorMessage = Greyhound.Message.Error(message, subscriberName, exception);
+            _pendingPutMessages.Add(gb =>
+            {
+                if (!gb.IsErrorBus)
+                    gb.ErrorBus.PutMessage(errorMessage);
+            });
         }
 
         public void PutAllEventsOnBus(GreyhoundBus greyhoundBus)
         {
-            PutEventsOnQueue(_messages, greyhoundBus);
-            PutEventsOnQueue(_errorMessages, greyhoundBus.ErrorBus);
-        }
-
-        private void PutEventsOnQueue(ConcurrentBag<IMessage> messages, GreyhoundBus greyhoundBus)
-        {
-            while (true)
-            {
-                IMessage message;
-                if (!messages.TryTake(out message))
-                    break;
-                Utils.PutNonGenericMessageOnBus(message, greyhoundBus);
-            }
+            Action<GreyhoundBus> action;
+            while (_pendingPutMessages.TryTake(out action))
+                action(greyhoundBus);
         }
     }
 }

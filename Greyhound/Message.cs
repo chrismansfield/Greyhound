@@ -19,5 +19,10 @@ namespace Greyhound
                     Exception = exception
                 };
         }
+
+        internal static MessageContext<T> Context<T>(IMessage<T> message)
+        {
+            return new MessageContext<T>(message);
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Greyhound
     public class GreyhoundBus
     {
         internal readonly GreyhoundBus ErrorBus;
-        private readonly bool _isErrorBus;
+        internal readonly bool IsErrorBus;
         private readonly ISubscriberManager _subscriberManager;
         private Pipeline _pipline;
 
@@ -23,7 +23,7 @@ namespace Greyhound
         internal GreyhoundBus(string name, bool isErrorBus)
         {
             Name = name;
-            _isErrorBus = isErrorBus;
+            IsErrorBus = isErrorBus;
             _subscriberManager = SuperSimpleIoC.Get<ISubscriberManager>();
             if (!isErrorBus)
             {
@@ -51,7 +51,7 @@ namespace Greyhound
         {
             foreach (IMessage message in Pipline.Persistor.Restore(Name))
                 Utils.PutNonGenericMessageOnBus(message, this);
-            if(!_isErrorBus)
+            if(!IsErrorBus)
                 ErrorBus.RestoreBus();
         }
 
@@ -59,7 +59,10 @@ namespace Greyhound
         {
             MessagePipelineContext<T> processedMessage = Pipline.ProcessInboundMessage(message);
 
-            _subscriberManager.PutMessageToSubscribers(processedMessage.Message)
+            if (processedMessage.Cancel)
+                return;
+
+            _subscriberManager.PutMessageToSubscribers(Message.Context(processedMessage.Message))
                               .ContinueWith(OnMessageDone);
         }
 
@@ -72,7 +75,7 @@ namespace Greyhound
 
         public void AddSubscriber<T>(ISubscriber<T> subscriber)
         {
-            if (!_isErrorBus && subscriber is ErrorSubscriber<T>)
+            if (!IsErrorBus && subscriber is ErrorSubscriber<T>)
                 ErrorBus.AddSubscriber(subscriber);
             else
                 _subscriberManager.AddSubscriber(subscriber);
