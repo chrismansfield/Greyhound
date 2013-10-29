@@ -26,17 +26,7 @@ namespace Greyhound
                 return messageContext;
             });
         }
-
-        public void AddSubscriber<T>(ISubscriber<T> subscriber)
-        {
-            _subscribers.Add(subscriber);
-        }
-
-        public bool HasErrorSubscriber<T>()
-        {
-            return _subscribers.OfType<ErrorSubscriber<T>>().Any();
-        }
-
+        
         private static Task InvokeSubscriber<T>(ISubscriber<T> subscriber, MessageContext<T> messageContext)
         {
             return Task.Run(() =>
@@ -51,5 +41,12 @@ namespace Greyhound
                 }
             });
         }
+
+        public void AddSubscriber<T>(ISubscriber<T> subscriber)
+        {
+            _subscribers.Add(subscriber);
+        }
+
+        
     }
 }
