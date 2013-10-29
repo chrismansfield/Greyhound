@@ -29,14 +29,14 @@ namespace Greyhound
             {
                 ErrorBus = new GreyhoundBus(string.Format("{0}.{1}", name, "error"), true)
                 {
-                    Pipline = {Persistor = Pipline.Persistor}
+                    Pipeline = {Persistor = Pipeline.Persistor}
                 };
             }
         }
 
         public string Name { get; private set; }
 
-        public Pipeline Pipline
+        public Pipeline Pipeline
         {
             get
             {
@@ -48,7 +48,7 @@ namespace Greyhound
 
         public void Restore()
         {
-            foreach (var message in Pipline.Persistor.Restore(Name))
+            foreach (var message in Pipeline.Persistor.Restore(Name))
                 Utils.PutMessageTypeSafe(message, this);
             if (!IsErrorBus)
                 ErrorBus.Restore();
@@ -56,7 +56,7 @@ namespace Greyhound
 
         public void PutMessage<T>(IMessage<T> message)
         {
-            IMessagePipelineContext<T> processedMessage = Pipline.ProcessInboundMessage(message);
+            IMessagePipelineContext<T> processedMessage = Pipeline.ProcessInboundMessage(message);
 
             if (processedMessage.Cancel)
                 return;
@@ -68,7 +68,7 @@ namespace Greyhound
         private void OnMessageDone<T>(Task<MessageContext<T>> context)
         {
             MessageContext<T> messageContext = context.Result;
-            Pipline.ProcessExpiringMessage(messageContext.Message);
+            Pipeline.ProcessExpiringMessage(messageContext.Message);
         }
 
         public void AddSubscriber<T>(ISubscriber<T> subscriber)
