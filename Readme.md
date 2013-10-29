@@ -66,8 +66,8 @@ If you want to put a new message on the bus from inside a subscriber, this can b
 By default, if a subscriber throws an exception, this exception is discarded. However you may register 
 one or more `ErrorSubscriber`s on the bus to catch these exceptions yourself.
 
-A ErrorSubscriber is implemented in exactly the same way as a normal subscriber. It does not allow basic 
-filtering, however the type filtering rules still apply. A `ErrorSubscriber` is registered the same way
+An ErrorSubscriber is implemented in exactly the same way as a normal subscriber. It does not allow basic 
+filtering, however the type filtering rules still apply. An `ErrorSubscriber` is registered the same way
 as normal subscribers.
 
 _Example:_
