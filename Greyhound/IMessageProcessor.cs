@@ -1,6 +1,6 @@
 ﻿namespace Greyhound
 {
-    public interface IMessageProcessor<T>
+    public interface IMessageProcessor<in T>
     {
         void ProcessMessage(IMessagePipelineContext<T> context);
     }

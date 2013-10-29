@@ -12,9 +12,9 @@ namespace Greyhound
 
         public void OnMessage(IMessageContext<T> messageContext)
         {
-            OnError(messageContext, (ErrorMessage<T>) messageContext.Message);
+            OnError((ErrorMessage<T>) messageContext.Message);
         }
 
-        protected abstract void OnError(IMessageContext<T> messageContext, ErrorMessage<T> message);
+        protected abstract void OnError(ErrorMessage<T> message);
     }
 }

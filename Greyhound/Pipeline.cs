@@ -27,7 +27,7 @@ namespace Greyhound
             set { _persistor = value; }
         }
 
-        public void AddInboundMessageProcessor<T>(IMessageProcessor<T> messageProcessor)
+        public void AddMessageProcessor<T>(IMessageProcessor<T> messageProcessor)
         {
             _inboundMessageProcessors.Add(messageProcessor);
         }

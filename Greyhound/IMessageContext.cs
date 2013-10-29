@@ -3,6 +3,6 @@
     public interface IMessageContext<out T>
     {
         IMessage<T> Message { get; }
-        void AddEvent<TEvent>(IMessage<TEvent> newMessage);
+        void PutEvent<TEvent>(IMessage<TEvent> newMessage);
     }
 }

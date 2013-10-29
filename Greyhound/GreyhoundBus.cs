@@ -46,12 +46,12 @@ namespace Greyhound
             }
         }
 
-        public void RestoreBus()
+        public void Restore()
         {
             foreach (var message in Pipline.Persistor.Restore(Name))
                 Utils.PutMessageTypeSafe(message, this);
             if (!IsErrorBus)
-                ErrorBus.RestoreBus();
+                ErrorBus.Restore();
         }
 
         public void PutMessage<T>(IMessage<T> message)

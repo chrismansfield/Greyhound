@@ -18,7 +18,7 @@ namespace Greyhound.Playground
             bus.AddSubscriber(new MySubscriber());
 
             
-            bus.RestoreBus();
+            bus.Restore();
 
             for (var i = 1; i < 1000; i++)
             {
@@ -64,7 +64,7 @@ namespace Greyhound.Playground
             if (messageContext.Message.Data.Counter % 10 == 0)
                 throw new AbandonedMutexException("LOL");
             Console.WriteLine("Message recieved: {0}", messageContext.Message.Data.Counter);
-            messageContext.AddEvent(
+            messageContext.PutEvent(
                 Message.Create(new MyEvent
                 {
                     Counter = messageContext.Message.Data.Counter,
@@ -106,7 +106,7 @@ namespace Greyhound.Playground
 
     internal class MyErrorSubscriber : ErrorSubscriber<MyMessage>
     {
-        protected override void OnError(IMessageContext<MyMessage> messageContext, ErrorMessage<MyMessage> message)
+        protected override void OnError(ErrorMessage<MyMessage> message)
         {
 
             Console.WriteLine("An error occured on subscriber {0}. Exception: {1}", message.SubscriberName, message.Exception);

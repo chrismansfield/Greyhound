@@ -14,7 +14,7 @@ namespace Greyhound
 
         public IMessage<T> Message { get; private set; }
 
-        public void AddEvent<TEvent>(IMessage<TEvent> newMessage)
+        public void PutEvent<TEvent>(IMessage<TEvent> newMessage)
         {
             _greyhoundBus.PutMessage(newMessage);
         }
