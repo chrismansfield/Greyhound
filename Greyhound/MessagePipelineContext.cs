@@ -1,6 +1,6 @@
 ﻿namespace Greyhound
 {
-    public class MessagePipelineContext<T>
+    internal class MessagePipelineContext<T> : IMessagePipelineContext<T>
     {
         public IMessage<T> Message { get; internal set; }
 

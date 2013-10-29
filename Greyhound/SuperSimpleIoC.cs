@@ -40,7 +40,7 @@ namespace Greyhound
         private void InitializeProviders()
         {
             _providers = GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public)
-                                  .ToDictionary(m => m.ReturnType);
+                .ToDictionary(m => m.ReturnType);
         }
 
         private T GetInstance<T>()

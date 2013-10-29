@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Greyhound
 {
-    public class GreyhoundBus
+    public sealed class GreyhoundBus
     {
         internal readonly GreyhoundBus ErrorBus;
         internal readonly bool IsErrorBus;
@@ -20,17 +20,17 @@ namespace Greyhound
         {
         }
 
-        internal GreyhoundBus(string name, bool isErrorBus)
+        private GreyhoundBus(string name, bool isErrorBus)
         {
             Name = name;
             IsErrorBus = isErrorBus;
             _subscriberManager = SuperSimpleIoC.Get<ISubscriberManager>();
             if (!isErrorBus)
             {
-                ErrorBus = new GreyhoundBus(string.Format("{0}.{1}", name, "error"), isErrorBus: true)
-                    {
-                        Pipline = {Persistor = Pipline.Persistor}
-                    };
+                ErrorBus = new GreyhoundBus(string.Format("{0}.{1}", name, "error"), true)
+                {
+                    Pipline = {Persistor = Pipline.Persistor}
+                };
             }
         }
 
@@ -41,35 +41,33 @@ namespace Greyhound
             get
             {
                 if (_pipline == null)
-                    _pipline = new Pipeline();
+                    _pipline = new Pipeline(this);
                 return _pipline;
             }
-            set { _pipline = value; }
         }
 
         public void RestoreBus()
         {
-            foreach (IMessage message in Pipline.Persistor.Restore(Name))
-                Utils.PutNonGenericMessageOnBus(message, this);
-            if(!IsErrorBus)
+            foreach (var message in Pipline.Persistor.Restore(Name))
+                Utils.PutMessageTypeSafe(message, this);
+            if (!IsErrorBus)
                 ErrorBus.RestoreBus();
         }
 
         public void PutMessage<T>(IMessage<T> message)
         {
-            MessagePipelineContext<T> processedMessage = Pipline.ProcessInboundMessage(message);
+            IMessagePipelineContext<T> processedMessage = Pipline.ProcessInboundMessage(message);
 
             if (processedMessage.Cancel)
                 return;
 
-            _subscriberManager.PutMessageToSubscribers(Message.Context(processedMessage.Message))
-                              .ContinueWith(OnMessageDone);
+            _subscriberManager.PutMessageToSubscribers(Message.Context(processedMessage.Message, this))
+                .ContinueWith(OnMessageDone);
         }
 
         private void OnMessageDone<T>(Task<MessageContext<T>> context)
         {
             MessageContext<T> messageContext = context.Result;
-            messageContext.PutAllEventsOnBus(this);
             Pipline.ProcessExpiringMessage(messageContext.Message);
         }
 

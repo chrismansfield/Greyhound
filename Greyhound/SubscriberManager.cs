@@ -18,13 +18,13 @@ namespace Greyhound
         public Task<MessageContext<T>> PutMessageToSubscribers<T>(MessageContext<T> messageContext)
         {
             return Task.Run(async () =>
-                {
-                    var subscribers = _subscribers.OfType<ISubscriber<T>>()
-                                                  .WhereFiltersMatch(messageContext.Message);
-                    await Task.WhenAll(subscribers.Select(subscriber => InvokeSubscriber(subscriber, messageContext)));
+            {
+                IEnumerable<ISubscriber<T>> subscribers = _subscribers.OfType<ISubscriber<T>>()
+                    .WhereFiltersMatch(messageContext.Message);
+                await Task.WhenAll(subscribers.Select(subscriber => InvokeSubscriber(subscriber, messageContext)));
 
-                    return messageContext;
-                });
+                return messageContext;
+            });
         }
 
         public void AddSubscriber<T>(ISubscriber<T> subscriber)
@@ -40,16 +40,16 @@ namespace Greyhound
         private static Task InvokeSubscriber<T>(ISubscriber<T> subscriber, MessageContext<T> messageContext)
         {
             return Task.Run(() =>
+            {
+                try
                 {
-                    try
-                    {
-                        subscriber.OnMessage(messageContext);
-                    }
-                    catch (Exception e)
-                    {
-                        messageContext.AddError(subscriber.GetType().Name, messageContext.Message, e);
-                    }
-                });
+                    subscriber.OnMessage(messageContext);
+                }
+                catch (Exception e)
+                {
+                    messageContext.AddError(subscriber.GetType().Name, messageContext.Message, e);
+                }
+            });
         }
     }
 }

@@ -2,6 +2,6 @@
 {
     public interface IMessageProcessor<T>
     {
-        void ProcessMessage(MessagePipelineContext<T> context);
+        void ProcessMessage(IMessagePipelineContext<T> context);
     }
 }

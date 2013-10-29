@@ -15,14 +15,20 @@ namespace Greyhound
             PutMessageMethod = new Lazy<MethodInfo>(() => typeof (GreyhoundBus).GetMethod("PutMessage"));
         }
 
-        internal static void PutNonGenericMessageOnBus(IMessage message, GreyhoundBus greyhoundBus)
+        /// <summary>
+        ///     Invokes PutMessage on the bus, using the concrete type of the message.
+        ///     For instance, if a <see cref="IMessage{String}" /> is passed but boxed
+        ///     in a <see cref="IMessage{Object}" /> this method ensures that
+        ///     <see cref="GreyhoundBus.PutMessage{String}" /> is called
+        /// </summary>
+        internal static void PutMessageTypeSafe(IMessage<object> message, GreyhoundBus greyhoundBus)
         {
             Type messageType = message.GetType();
             if (!messageType.IsGenericType)
                 return; //Discard this?
             Type messageDataType = messageType.GetGenericArguments()[0];
             CachedGenericMethods.GetOrAdd(messageDataType, t => PutMessageMethod.Value.MakeGenericMethod(t))
-                                 .Invoke(greyhoundBus, new object[] {message});
+                .Invoke(greyhoundBus, new object[] {message});
         }
     }
 }

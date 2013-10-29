@@ -1,27 +1,40 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Greyhound
 {
-    public class InMemoryPersistor : Persistor
+    public class InMemoryPersistor : IPersistor
     {
-        private readonly ConcurrentDictionary<object, object> _messages = new ConcurrentDictionary<object, object>();
+        private static readonly ConcurrentDictionary<MessageKey, IMessage<object>> Messages;
 
-        public override void Persist(object key, object message)
+        static InMemoryPersistor()
         {
-            _messages.AddOrUpdate(key, message, (_, __) => message);
+            Messages = new ConcurrentDictionary<MessageKey, IMessage<object>>();
         }
 
-        public override void Delete(object key)
+        public void Persist(string busName, Guid key, IMessage<object> message)
         {
-            object stub;
-            _messages.TryRemove(key, out stub);
+            Messages.AddOrUpdate(new MessageKey(busName, key), message, (_, __) => message);
         }
 
-        public override IEnumerable<IMessage> Restore(string busName)
+        public void Delete(Guid key)
         {
-            return _messages.Values.OfType<IMessage>();
+            IMessage<object> stub;
+            Messages.TryRemove(new MessageKey(MessageKey.AnyBusName, key), out stub);
         }
+
+        public IEnumerable<IMessage<object>> Restore(string busName)
+        {
+            return Messages.Where(x => x.Key.BusName == busName).Select(x => x.Value).ToArray();
+        }
+
+        public static IDictionary<MessageKey, IMessage<object>> GetAllCurrentlyPersistedMessages()
+        {
+            return new Dictionary<MessageKey, IMessage<object>>(Messages);
+        }
+
+        
     }
 }

@@ -10,11 +10,11 @@ namespace Greyhound
             return Enumerable.Empty<IFilter<T>>();
         }
 
-        public void OnMessage(MessageContext<T> messageContext)
+        public void OnMessage(IMessageContext<T> messageContext)
         {
             OnError(messageContext, (ErrorMessage<T>) messageContext.Message);
         }
 
-        protected abstract void OnError(MessageContext<T> messageContext, ErrorMessage<T> message);
+        protected abstract void OnError(IMessageContext<T> messageContext, ErrorMessage<T> message);
     }
 }

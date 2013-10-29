@@ -1,6 +1,6 @@
 ﻿namespace Greyhound
 {
-    public interface IFilter<T>
+    public interface IFilter<in T>
     {
         bool Match(IMessage<T> message);
     }

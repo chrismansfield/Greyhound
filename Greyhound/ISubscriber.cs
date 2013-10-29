@@ -2,10 +2,10 @@
 
 namespace Greyhound
 {
-    public interface ISubscriber<T>
+    public interface ISubscriber<in T>
     {
         IEnumerable<IFilter<T>> GetFilters();
 
-        void OnMessage(MessageContext<T> messageContext);
+        void OnMessage(IMessageContext<T> messageContext);
     }
 }

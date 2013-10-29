@@ -6,7 +6,7 @@ namespace Greyhound
     internal static class FilterManager
     {
         public static IEnumerable<ISubscriber<T>> WhereFiltersMatch<T>(this IEnumerable<ISubscriber<T>> subscribers,
-                                                                       IMessage<T> message)
+            IMessage<T> message)
         {
             return subscribers.Where(subscriber => EvaluateFilters(subscriber.GetFilters(), message));
         }

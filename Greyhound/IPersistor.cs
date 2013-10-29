@@ -1,15 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Greyhound
 {
     public interface IPersistor
     {
-        object GetKey(object data);
+        void Persist(string busName, Guid key, IMessage<object> message);
 
-        void Persist(object key, object message);
+        void Delete(Guid key);
 
-        void Delete(object key);
-
-        IEnumerable<IMessage> Restore(string busName);
+        IEnumerable<IMessage<object>> Restore(string busName);
     }
 }

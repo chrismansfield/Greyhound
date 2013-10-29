@@ -1,19 +1,10 @@
-﻿namespace Greyhound
+﻿using System;
+
+namespace Greyhound
 {
-    public interface IMessage
+    public interface IMessage<out T>
     {
-        bool IsEvent { get; set; }
-    }
-
-    public interface IMessage<out T> : IMessage
-    {
+        Guid Id { get; }
         T Data { get; }
-    }
-
-    public class Message<T> : IMessage<T>
-    {
-        public bool IsEvent { get; set; }
-
-        public T Data { get; internal set; }
     }
 }
