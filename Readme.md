@@ -39,8 +39,8 @@ as filters are evaluated sequentially
 **Message Type Filtering**
 
 In addition to normal filters, each subscriber automatically filters messages on its 
-generic type parameter. For instance, a implementation of `ISubscriber<string>` will
-only recieve messages of type `IMessage<string>` **or any message with a subclass of string**.
+generic type parameter. For instance, a implementation of `ISubscriber<SomeClass>` will
+only recieve messages of type `IMessage<SomeClass>` **or any message with a subclass of SomeClass**.
 This allow us to create "CatchAll" or "CatchMany" subscribers that can catch messages based on
 types they have in common.
 
