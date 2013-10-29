@@ -24,7 +24,12 @@ namespace Greyhound
                     _persistor = new InMemoryPersistor();
                 return _persistor;
             }
-            set { _persistor = value; }
+            set 
+            { 
+                _persistor = value;
+                if(!_greyhoundBus.IsErrorBus)
+                    _greyhoundBus.ErrorBus.Pipeline.Persistor = value;
+            }
         }
 
         public void AddMessageProcessor<T>(IMessageProcessor<T> messageProcessor)
