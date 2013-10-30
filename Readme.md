@@ -7,7 +7,7 @@ Greyhound is a very tiny, in-memory message bus. It supports basic features like
 
     var bus = new GreyhoundBus();
     bus.AddSubscriber(new MySubscriber());
-    bus.PutMessage(Message.Create("Hello");
+    bus.PutMessage(Message.Create("Hello"));
 
     public class MySubscriber : ISubscriber<string>
     {
