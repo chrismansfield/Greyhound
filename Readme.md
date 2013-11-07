@@ -1,13 +1,14 @@
 Greyhound
 ====
 
-Greyhound is a very tiny, in-memory message bus. It supports basic features like message filtering, error handling and persistance.
+Greyhound is a very tiny, in-memory message bus. It supports basic features like message filtering, 
+error handling and persistance.
 
 **Simple Usage**
 
     var bus = new GreyhoundBus();
     bus.AddSubscriber(new MySubscriber());
-    bus.PutMessage(Message.Create("Hello");
+    bus.PutMessage(Message.Create("Hello"));
 
     public class MySubscriber : ISubscriber<string>
     {
@@ -105,18 +106,18 @@ Per default, messages are only stored in memory, however you may implement your 
 
     public class MyCustomRavenDbPersistor : IPersistor
     {
-        void Persist(string busName, Guid key, IMessage<object> message)
+        public void Persist(string busName, Guid key, IMessage<object> message)
         {
             //Magic
         }
 
-        void Delete(Guid key)
+        public void Delete(Guid key)
         {
             //More Magic
         }
 
          //This is where our custom name comes in handy   
-        IEnumerable<IMessage<object>> Restore(string busName)
+        public IEnumerable<IMessage<object>> Restore(string busName)
         {
             //Restoration magic
         }
