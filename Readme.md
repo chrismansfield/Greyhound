@@ -23,6 +23,26 @@ error handling and persistance.
         }
     }
 
+**Async Await support**
+
+If you have a long-running process inside a subscriber, you might want to do it asynchronously. 
+This can be achieved by inheriting from ´AsyncSubscriber´ (which in turn implements `ISubscriber`)
+
+In an `AsyncSubscriber` you will instead override the `OnMessageAsync` method, returning a `Task`.
+
+    public class MyAsyncSubscriber : AsyncSubscriber<string>
+    {
+        public overrides IEnumerable<IFilter<string>> GetFilters()
+        {
+            return Filter.NoFilter<string>(); //"Synthetic sugar" instead of returning empty list
+        }
+
+        public overrides async Task OnMessageAsync(IMessageContext<string> messageContext)
+        {
+            await DoSomethingAsync();
+        }
+    }
+
 **Filtering**
 
 Each subscriber is responsible for returning any filters in the `GetFilters()` method.
