@@ -29,6 +29,28 @@ namespace Greyhound
         
         private static Task InvokeSubscriber<T>(ISubscriber<T> subscriber, MessageContext<T> messageContext)
         {
+            var asyncSubscriber = subscriber as AsyncSubscriber<T>;
+            if (asyncSubscriber != null)
+                return InvokeAsynSubscriber(asyncSubscriber, messageContext);
+            
+            return InvokeSynchronousSubscriber(subscriber, messageContext);
+        }
+
+        private static async Task InvokeAsynSubscriber<T>(AsyncSubscriber<T> asyncSubscriber, MessageContext<T> messageContext)
+        {
+            try
+            {
+                await asyncSubscriber.OnMessageAsync(messageContext);
+            }
+            catch (Exception e)
+            {
+                messageContext.AddError(asyncSubscriber.GetType().Name, messageContext.Message, e);
+            }
+            
+        }
+
+        private static Task InvokeSynchronousSubscriber<T>(ISubscriber<T> subscriber, MessageContext<T> messageContext)
+        {
             return Task.Run(() =>
             {
                 try

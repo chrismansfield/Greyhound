@@ -62,7 +62,7 @@ namespace Greyhound
                 return;
 
             _subscriberManager.PutMessageToSubscribers(Message.Context(processedMessage.Message, this))
-                .ContinueWith(OnMessageDone);
+                .ContinueWith(OnMessageDone, TaskContinuationOptions.NotOnFaulted);
         }
 
         private void OnMessageDone<T>(Task<MessageContext<T>> context)

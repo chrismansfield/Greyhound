@@ -24,8 +24,6 @@ namespace Greyhound
         internal static void PutMessageTypeSafe(IMessage<object> message, GreyhoundBus greyhoundBus)
         {
             Type messageType = message.GetType();
-            if (!messageType.IsGenericType)
-                return; //Discard this?
             Type messageDataType = messageType.GetGenericArguments()[0];
             CachedGenericMethods.GetOrAdd(messageDataType, t => PutMessageMethod.Value.MakeGenericMethod(t))
                 .Invoke(greyhoundBus, new object[] {message});

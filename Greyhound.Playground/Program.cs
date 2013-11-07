@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Greyhound.Filters;
 
 namespace Greyhound.Playground
@@ -25,6 +26,7 @@ namespace Greyhound.Playground
                 bus.PutMessage(Message.Create(new MyMessage { Counter = i }));
             }
 
+            //bus.PutMessage(Message.Create(new MyMessage { Counter = 2 }));
             Console.WriteLine("All messages has been put on the queue!");
 
             Console.ReadLine();
@@ -49,18 +51,18 @@ namespace Greyhound.Playground
         public int Counter { get; set; }
     }
 
-    internal class MySubscriber : ISubscriber<MyMessage>
+    internal class MySubscriber : AsyncSubscriber<MyMessage>
     {
         readonly Random _random = new Random();
 
-        public IEnumerable<IFilter<MyMessage>> GetFilters()
+        public override IEnumerable<IFilter<MyMessage>> GetFilters()
         {
             yield return new BasicFilter<MyMessage>(x => x.Data.Counter % 2 == 0);
         }
-        
-        public void OnMessage(IMessageContext<MyMessage> messageContext)
+
+        public override async Task OnMessageAsync(IMessageContext<MyMessage> messageContext)
         {
-            Thread.Sleep(_random.Next(1000, 3000));
+            await Task.Delay(_random.Next(1000, 3000));
             if (messageContext.Message.Data.Counter % 10 == 0)
                 throw new AbandonedMutexException("LOL");
             Console.WriteLine("Message recieved: {0}", messageContext.Message.Data.Counter);

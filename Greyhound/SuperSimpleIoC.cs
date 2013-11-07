@@ -7,7 +7,7 @@ namespace Greyhound
 {
     internal class SuperSimpleIoC
     {
-        public static SuperSimpleIoC Container;
+        private static SuperSimpleIoC _container;
         private Dictionary<Type, MethodInfo> _providers;
 
         private Dictionary<Type, MethodInfo> Providers
@@ -27,14 +27,14 @@ namespace Greyhound
 
         public static void Initialize(SuperSimpleIoC container)
         {
-            Container = container;
+            _container = container;
         }
 
         public static T Get<T>()
         {
-            if (Container == null)
+            if (_container == null)
                 Initialize();
-            return Container.GetInstance<T>();
+            return _container.GetInstance<T>();
         }
 
         private void InitializeProviders()
@@ -48,7 +48,7 @@ namespace Greyhound
             if (!Providers.ContainsKey(typeof (T)))
                 throw new TypeLoadException(string.Format("The type {0} is not in the current container", typeof (T)));
 
-            return (T) Providers[typeof (T)].Invoke(Container, Enumerable.Empty<object>().ToArray());
+            return (T) Providers[typeof (T)].Invoke(_container, Enumerable.Empty<object>().ToArray());
         }
 
         public virtual ISubscriberManager ProvideSubscriberManager()
