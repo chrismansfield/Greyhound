@@ -31,12 +31,12 @@ namespace Greyhound
         {
             var asyncSubscriber = subscriber as AsyncSubscriber<T>;
             if (asyncSubscriber != null)
-                return InvokeAsynSubscriber(asyncSubscriber, messageContext);
+                return InvokeAsyncSubscriber(asyncSubscriber, messageContext);
             
             return InvokeSynchronousSubscriber(subscriber, messageContext);
         }
 
-        private static async Task InvokeAsynSubscriber<T>(AsyncSubscriber<T> asyncSubscriber, MessageContext<T> messageContext)
+        private static async Task InvokeAsyncSubscriber<T>(AsyncSubscriber<T> asyncSubscriber, MessageContext<T> messageContext)
         {
             try
             {
