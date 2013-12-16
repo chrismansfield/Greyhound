@@ -1,74 +1,73 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
+using Greyhound.Filters;
 
 namespace Greyhound
 {
-    internal class SubscriberManager : ISubscriberManager
+    internal class SubscriberManager<TMessage> : ISubscriberManager<TMessage>
     {
-        private readonly ICollection<object> _subscribers;
+        private readonly ISubscriber<TMessage> _subscriber;
+        private readonly ConcurrentQueue<IMessageContext<TMessage>> _messages;
+        private FilterAttribute[] _filters;
+        private RunnableAttribute[] _runnableFilters;
 
-        public SubscriberManager()
+        public SubscriberManager(ISubscriber<TMessage> subscriber)
         {
-            _subscribers = new Collection<object>();
+            _subscriber = ParseSubscriber(subscriber);
+            _messages = new ConcurrentQueue<IMessageContext<TMessage>>();
         }
 
-        public Task<MessageContext<T>> PutMessageToSubscribers<T>(MessageContext<T> messageContext)
+        private ISubscriber<TMessage> ParseSubscriber(ISubscriber<TMessage> subscriber)
         {
-            return Task.Run(async () =>
-            {
-                IEnumerable<ISubscriber<T>> subscribers = _subscribers.OfType<ISubscriber<T>>()
-                    .WhereFiltersMatch(messageContext.Message);
-                await Task.WhenAll(subscribers.Select(subscriber => InvokeSubscriber(subscriber, messageContext)));
+            var filters = subscriber.GetType().GetCustomAttributes<FilterAttribute>().ToArray();
+            _runnableFilters = filters.OfType<RunnableAttribute>().ToArray();
+            _filters = filters.Except(_runnableFilters).ToArray();
 
-                return messageContext;
-            });
-        }
-        
-        private static Task InvokeSubscriber<T>(ISubscriber<T> subscriber, MessageContext<T> messageContext)
-        {
-            var asyncSubscriber = subscriber as AsyncSubscriber<T>;
-            if (asyncSubscriber != null)
-                return InvokeAsyncSubscriber(asyncSubscriber, messageContext);
-            
-            return InvokeSynchronousSubscriber(subscriber, messageContext);
+            return subscriber;
         }
 
-        private static async Task InvokeAsyncSubscriber<T>(AsyncSubscriber<T> asyncSubscriber, MessageContext<T> messageContext)
+        public void PutMessage(IMessageContext<TMessage> message)
+        {
+            _messages.Enqueue(message);
+        }
+
+        public bool CanRunNext()
+        {
+            bool result = false;
+            IMessageContext<TMessage> messageContext;
+            if (_messages.TryPeek(out messageContext))
+                result = _runnableFilters.All(x => x.Evaluate((IMessage<object>)messageContext.Message));
+            return result;
+        }
+
+        public void RunNext()
+        {
+            IMessageContext<TMessage> messageContext;
+            if (_messages.TryDequeue(out messageContext) && ValidateMessage(messageContext.Message))
+                InvokeSubscriber(_subscriber, messageContext);
+            foreach (var runnableFilter in _runnableFilters)
+                runnableFilter.Expire((IMessageContext<object>)messageContext);
+
+        }
+
+        private bool ValidateMessage(IMessage<TMessage> message)
+        {
+            return _filters.All(x => x.Evaluate((IMessage<object>)message));
+        }
+
+        private void InvokeSubscriber(ISubscriber<TMessage> subscriber, IMessageContext<TMessage> messageContext)
         {
             try
             {
-                await asyncSubscriber.OnMessageAsync(messageContext);
+                subscriber.OnMessage(messageContext);
             }
             catch (Exception e)
             {
-                messageContext.AddError(asyncSubscriber.GetType().Name, messageContext.Message, e);
+                ((IInternalMessageContext<TMessage>) messageContext).AddError(subscriber.GetType().Name, messageContext.Message, e);
             }
-            
         }
-
-        private static Task InvokeSynchronousSubscriber<T>(ISubscriber<T> subscriber, MessageContext<T> messageContext)
-        {
-            return Task.Run(() =>
-            {
-                try
-                {
-                    subscriber.OnMessage(messageContext);
-                }
-                catch (Exception e)
-                {
-                    messageContext.AddError(subscriber.GetType().Name, messageContext.Message, e);
-                }
-            });
-        }
-
-        public void AddSubscriber<T>(ISubscriber<T> subscriber)
-        {
-            _subscribers.Add(subscriber);
-        }
-
-        
     }
+
 }

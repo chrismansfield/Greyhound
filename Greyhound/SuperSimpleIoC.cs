@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,12 @@ namespace Greyhound
     {
         private static SuperSimpleIoC _container;
         private Dictionary<Type, MethodInfo> _providers;
+        private ConcurrentDictionary<Type, object> _singletonObjects;
+
+        public SuperSimpleIoC()
+        {
+            _singletonObjects = new ConcurrentDictionary<Type, object>();
+        }
 
         private Dictionary<Type, MethodInfo> Providers
         {
@@ -51,9 +58,20 @@ namespace Greyhound
             return (T) Providers[typeof (T)].Invoke(_container, Enumerable.Empty<object>().ToArray());
         }
 
-        public virtual ISubscriberManager ProvideSubscriberManager()
+        public virtual ISubscriberCoordinator ProvideSubscriberManager()
         {
-            return new SubscriberManager();
+            return new SubscriberCoordinator(ProvideSubscriberRunner());
+        }
+
+        public virtual ISubscriberRunner ProvideSubscriberRunner()
+        {
+            return GetSingleton<ISubscriberRunner>(() => new SubscriberRunner());
+        }
+
+        private T GetSingleton<T>(Func<T> factory)
+        {
+            var singletonType = typeof(T);
+            return (T) _singletonObjects.GetOrAdd(singletonType, t => factory());
         }
     }
 }

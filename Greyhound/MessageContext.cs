@@ -2,7 +2,7 @@
 
 namespace Greyhound
 {
-    internal class MessageContext<T> : IMessageContext<T>
+    internal class MessageContext<T> : IInternalMessageContext<T>, IMessageContext<T>
     {
         private readonly GreyhoundBus _greyhoundBus;
 
@@ -19,7 +19,7 @@ namespace Greyhound
             _greyhoundBus.PutMessage(newMessage);
         }
 
-        internal void AddError(string subscriberName, IMessage<T> message, Exception exception)
+        public void AddError(string subscriberName, IMessage<T> message, Exception exception)
         {
             ErrorMessage<T> errorMessage = Greyhound.Message.Error(message, subscriberName, exception);
             if (!_greyhoundBus.IsErrorBus)

@@ -5,7 +5,7 @@ namespace Greyhound
 {
     public struct MessageKey : IEqualityComparer<MessageKey>, IEquatable<MessageKey>
     {
-        public const String AnyBusName = "760E2510-061F-4B68-A7B3-514464F0A187";
+        public const String AnyBusName = "{{_greyhound_internals_anybus}}";
 
         public MessageKey(string busName, Guid id)
             : this()
@@ -29,7 +29,7 @@ namespace Greyhound
 
         public bool Equals(MessageKey x, MessageKey y)
         {
-            return (x.BusName == AnyBusName || x.BusName == y.BusName) && x.Id == y.Id;
+            return (x.BusName == AnyBusName || y.BusName == AnyBusName || x.BusName == y.BusName) && x.Id == y.Id;
         }
 
         public override int GetHashCode()

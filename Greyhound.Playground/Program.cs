@@ -18,10 +18,7 @@ namespace Greyhound.Playground
             bus.AddSubscriber(new MyErrorSubscriber());
             bus.AddSubscriber(new MySubscriber());
 
-            
-            bus.Restore();
-
-            for (var i = 1; i < 1000; i++)
+            for (var i = 1; i < 100; i++)
             {
                 bus.PutMessage(Message.Create(new MyMessage { Counter = i }));
             }
@@ -47,25 +44,24 @@ namespace Greyhound.Playground
     class MyEvent : IStuff
     {
         public string Whatever { get; set; }
-        
+
         public int Counter { get; set; }
     }
 
-    internal class MySubscriber : AsyncSubscriber<MyMessage>
+    [MyFilter]
+    internal class MySubscriber : ISubscriber<MyMessage>
     {
         readonly Random _random = new Random();
 
-        public override IEnumerable<IFilter<MyMessage>> GetFilters()
-        {
-            yield return new BasicFilter<MyMessage>(x => x.Data.Counter % 2 == 0);
-        }
+        
 
-        public override async Task OnMessageAsync(IMessageContext<MyMessage> messageContext)
+        public void OnMessage(IMessageContext<MyMessage> messageContext)
         {
-            await Task.Delay(_random.Next(1000, 3000));
+            Console.WriteLine("Message recieved: {0}", messageContext.Message.Data.Counter);
+            Thread.Sleep(_random.Next(1000,5000));
             if (messageContext.Message.Data.Counter % 10 == 0)
                 throw new AbandonedMutexException("LOL");
-            Console.WriteLine("Message recieved: {0}", messageContext.Message.Data.Counter);
+            Console.WriteLine("Message Done: {0}", messageContext.Message.Data.Counter);
             messageContext.PutEvent(
                 Message.Create(new MyEvent
                 {
@@ -73,20 +69,27 @@ namespace Greyhound.Playground
                     Whatever = "Hello"
                 }));
         }
+
+    }
+
+    public class MyFilterAttribute : FilterAttribute
+    {
+        public override bool Evaluate(IMessage<object> message)
+        {
+            var msg = message.Data as MyMessage;
+            if(msg != null)
+                return msg.Counter % 2 == 0;
+            return false;
+        }
     }
 
     class MyEventSubscriber : ISubscriber<MyEvent>
     {
         readonly Random _random = new Random();
 
-        public IEnumerable<IFilter<MyEvent>> GetFilters()
-        {
-            return Filter.NoFilter<MyEvent>();
-        }
-
         public void OnMessage(IMessageContext<MyEvent> messageContext)
         {
-            Thread.Sleep(_random.Next(1000, 3000));
+            //Thread.Sleep(_random.Next(1000, 3000));
             Console.WriteLine(messageContext.Message.Data.Whatever);
         }
     }
@@ -94,14 +97,10 @@ namespace Greyhound.Playground
     class AllSubscriber : ISubscriber<IStuff>
     {
         readonly Random _random = new Random();
-        public IEnumerable<IFilter<IStuff>> GetFilters()
-        {
-            return Filter.NoFilter<IStuff>();
-        }
 
         public void OnMessage(IMessageContext<IStuff> messageContext)
         {
-            Thread.Sleep(_random.Next(1000, 3000));
+            //Thread.Sleep(_random.Next(1000, 3000));
             Console.WriteLine("CatchAll: {0}", messageContext.Message.Data.Counter);
         }
     }

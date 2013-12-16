@@ -1,10 +1,13 @@
-﻿using System.Threading.Tasks;
-
-namespace Greyhound
+﻿namespace Greyhound
 {
     internal interface ISubscriberManager
     {
-        Task<MessageContext<T>> PutMessageToSubscribers<T>(MessageContext<T> messageContext);
-        void AddSubscriber<T>(ISubscriber<T> subscriber);
+        bool CanRunNext();
+        void RunNext();
+    }
+
+    internal interface ISubscriberManager<in TMessage> : ISubscriberManager
+    {
+        void PutMessage(IMessageContext<TMessage> message);
     }
 }
