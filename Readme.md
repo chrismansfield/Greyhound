@@ -14,7 +14,7 @@ error handling and persistance.
     {
         public IEnumerable<IFilter<string>> GetFilters()
         {
-            return Filter.NoFilter<string>(); //"Synthetic sugar" instead of returning empty list
+            return Filter.NoFilter<string>(); //"Syntactic sugar" instead of returning empty list
         }
 
         public void OnMessage(IMessageContext<string> messageContext)
